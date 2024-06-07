@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { fetchCoins } from "../api";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -8,19 +10,11 @@ const Container = styled.div`
   margin: 0 auto;
 `;
 
-const Header = styled.header`
-  height: 15vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
 const CoinsList = styled.ul``;
 
 const Coin = styled.li`
-  background-color: white;
-  color: ${(props) => props.theme.bgColor};
-  border-radius: 15px;
+  background-color: ${(props) => props.theme.cardBgColor};
+  color: ${(props) => props.theme.textColor};
   margin-bottom: 10px;
   a {
     display: flex;
@@ -30,14 +24,9 @@ const Coin = styled.li`
   }
   &:hover {
     a {
-      color: ${(props) => props.theme.accentColor};
+      background-color: ${(props) => props.theme.accentColor};
     }
   }
-`;
-
-const Title = styled.h1`
-  font-size: 48px;
-  color: ${(props) => props.theme.accentColor};
 `;
 
 const Loader = styled.div`
@@ -50,7 +39,7 @@ const Img = styled.img`
   height: 35px;
   margin-right: 10px;
 `;
-interface CoinInterface{
+interface CoinInterface {
   id: string;
   name: string;
   symbol: string;
@@ -61,6 +50,11 @@ interface CoinInterface{
 }
 
 function Coins() {
+  const { isLoading, data } = useQuery<CoinInterface[]>({
+    queryKey: ["allCoins"],
+    queryFn: fetchCoins,
+  });
+  /*
   const [coins, setCoins] = useState<CoinInterface[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(()=>{
@@ -70,30 +64,31 @@ function Coins() {
      setCoins(json.slice(0,100));
      setLoading(false);
     })();
-  },[])
+  },[]) 
+  */
   return (
     <Container>
-      <Header>
-        <Title>코인</Title>
-      </Header>
-
-      {loading ? <Loader>Loading...</Loader> : 
-          <CoinsList>
-          {coins.map((coin) => (
+      {isLoading ? (
+        <Loader>Loading...</Loader>
+      ) : (
+        <CoinsList>
+          {data?.slice(0, 100).map((coin) => (
             <Coin key={coin.id}>
-              <Link to={{
-                pathname:`crypto-tracker/${coin.id}`,
-                state:{ name:coin.name },
-              }}>
-              <Img
+              <Link
+                to={{
+                  pathname: `crypto-tracker/${coin.id}`,
+                  state: { name: coin.name },
+                }}
+              >
+                <Img
                   src={`https://static.coinpaprika.com/coin/${coin.id}/logo.png`}
                 />
-                {coin.name} &rarr;</Link>
+                {coin.name} &rarr;
+              </Link>
             </Coin>
           ))}
         </CoinsList>
-      }
-
+      )}
     </Container>
   );
 }
